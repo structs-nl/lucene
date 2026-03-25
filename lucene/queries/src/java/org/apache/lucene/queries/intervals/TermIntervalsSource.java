@@ -64,10 +64,23 @@ class TermIntervalsSource extends IntervalsSource {
     return intervals(term, te);
   }
 
+  private static int decodePayload(BytesRef payload) { // added
+    if (payload == null) {
+      return 1;
+    }
+    int length = 0;
+    for (int i = payload.offset; i < payload.offset + payload.length; i++) {
+      length = (length << 8) | Byte.toUnsignedInt(payload.bytes[i]);
+    }
+    return length;
+  }
+
   static IntervalIterator intervals(BytesRef term, TermsEnum te) throws IOException {
-    PostingsEnum pe = te.postings(null, PostingsEnum.POSITIONS);
+    PostingsEnum pe = te.postings(null, PostingsEnum.PAYLOADS); // Changed
     float cost = termPositionsCost(te);
     return new IntervalIterator() {
+
+      int length;
 
       @Override
       public int docID() {
@@ -102,7 +115,7 @@ class TermIntervalsSource extends IntervalsSource {
 
       @Override
       public int end() {
-        return pos;
+        return pos + length - 1; // changed
       }
 
       @Override
@@ -116,7 +129,10 @@ class TermIntervalsSource extends IntervalsSource {
           return pos = NO_MORE_INTERVALS;
         }
         upto--;
-        return pos = pe.nextPosition();
+        pos = pe.nextPosition(); //changed
+        length = decodePayload(pe.getPayload()); // changed
+
+        return pos; //change
       }
 
       @Override
@@ -163,7 +179,7 @@ class TermIntervalsSource extends IntervalsSource {
 
   static IntervalMatchesIterator matches(TermsEnum te, int doc, String field) throws IOException {
     TermQuery query = new TermQuery(new Term(field, te.term()));
-    PostingsEnum pe = te.postings(null, PostingsEnum.OFFSETS);
+    PostingsEnum pe = te.postings(null, PostingsEnum.ALL); // changed
     if (pe.advance(doc) != doc) {
       return null;
     }
@@ -181,6 +197,8 @@ class TermIntervalsSource extends IntervalsSource {
 
       int upto = pe.freq();
       int pos = -1;
+      int length = 1; // changed method
+
 
       @Override
       public boolean next() throws IOException {
@@ -190,6 +208,7 @@ class TermIntervalsSource extends IntervalsSource {
         }
         upto--;
         pos = pe.nextPosition();
+        length = decodePayload(pe.getPayload()); // changed method
         return true;
       }
 
@@ -200,7 +219,7 @@ class TermIntervalsSource extends IntervalsSource {
 
       @Override
       public int endPosition() {
-        return pos;
+        return pos + length - 1; // changed method
       }
 
       @Override
