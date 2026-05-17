@@ -80,7 +80,7 @@ class TermIntervalsSource extends IntervalsSource {
     float cost = termPositionsCost(te);
     return new IntervalIterator() {
 
-      int length;
+      int length = 1;
 
       @Override
       public int docID() {
@@ -129,10 +129,10 @@ class TermIntervalsSource extends IntervalsSource {
           return pos = NO_MORE_INTERVALS;
         }
         upto--;
-        pos = pe.nextPosition(); //changed
+        pos = pe.nextPosition(); // changed
         length = decodePayload(pe.getPayload()); // changed
 
-        return pos; //change
+        return pos; // change
       }
 
       @Override
@@ -198,7 +198,6 @@ class TermIntervalsSource extends IntervalsSource {
       int upto = pe.freq();
       int pos = -1;
       int length = 1; // changed method
-
 
       @Override
       public boolean next() throws IOException {
