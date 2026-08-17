@@ -26,17 +26,9 @@ configure(rootProject) {
   task mavenToGithubPackages() {
     group "Distribution"
     description "Publish Lucene Maven artifacts to Github Packages: ${githubPackagesRepository}"
-
-    dependsOn rootProject.ext.mavenProjects.collect {
-      it.tasks.matching { it.name == "publishJarsPublicationToApacheSnapshotsRepository" }
-    }
   }
 
   configure(rootProject.ext.mavenProjects) { Project project ->
-    // Make sure any actual publication task is preceded by precondition checks.
-    tasks.matching { it.name ==~ /publish.+ToApacheReleasesRepository/ }.all {
-      dependsOn rootProject.tasks.checkReleasesRepositoryPushPreconditions
-    }
 
     // Configure the release repository.
     plugins.withType(PublishingPlugin) {
