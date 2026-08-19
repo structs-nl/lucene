@@ -21,7 +21,6 @@ import java.time.format.DateTimeFormatter
 plugins {
   id "base"
   id "lucene.build-infra"
-  id "maven-publish"
 
   alias(deps.plugins.dependencychecks)
   alias(deps.plugins.spotless) apply false
